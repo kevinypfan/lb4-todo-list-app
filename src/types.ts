@@ -10,3 +10,9 @@ export interface PaginationFilter {
   limit?: number;
   order?: string[];
 }
+
+export enum TodoStatus {
+  ACTIVE = 'ACTIVE',
+  INACTIVE = 'INACTIVE',
+  DELETED = 'DELETED',
+}
