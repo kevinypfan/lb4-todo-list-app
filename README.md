@@ -1,103 +1,198 @@
-# todo-list-app
+# Todo List Application
 
-This application is generated using [LoopBack 4 CLI](https://loopback.io/doc/en/lb4/Command-line-interface.html) with the
-[initial project layout](https://loopback.io/doc/en/lb4/Loopback-application-layout.html).
+This is a Todo List management system developed with the [LoopBack 4](https://loopback.io/doc/en/lb4/index.html) framework. The application provides a complete REST API supporting CRUD operations for todo items and management of sub-items for each todo.
 
-## Install dependencies
+## Features
 
-By default, dependencies were installed when this application was generated.
-Whenever dependencies in `package.json` are changed, run the following command:
+- Complete Todo item management, including:
+  - Creating, updating, querying, and soft deleting Todos
+  - Support for adding multiple sub-items to each Todo
+  - Marking sub-items as completed or incomplete
+- Pagination support for retrieving Todo lists
+- Soft delete: Todos aren't actually removed from the database, just marked as deleted
+- One-click deployment with Docker, including the application and MySQL database
+- Automatic database migration when starting the application
+
+## Technology Stack
+
+- **Backend Framework**: LoopBack 4 (based on TypeScript and Node.js)
+- **Database**: MySQL 8.0
+- **Containerization**: Docker & Docker Compose
+- **API Documentation**: OpenAPI (Swagger)
+- **Database Management Tool**: Adminer
+
+## Installation and Setup
+
+### Prerequisites
+
+- Node.js v18+ or Docker environment
+- MySQL database (for local development) or use Docker Compose
+
+### Installing Dependencies
 
 ```sh
 npm install
+# or use pnpm
+pnpm install
 ```
 
-To only install resolved dependencies in `package-lock.json`:
+To install only the dependencies specified in package-lock.json:
 
 ```sh
 npm ci
 ```
 
-## 環境變數設定
+### Environment Variables
 
-請在專案根目錄建立 `.env` 文件（可參考 `.env.example`），並設定以下環境變數：
+Create a `.env` file in the project root (reference `.env.example`), and set the following environment variables:
 
 ```
-# MySQL 資料庫設定
-DB_HOST=localhost        # 資料庫主機
-DB_PORT=3306             # 資料庫端口
-DB_USER=root             # 資料庫用戶名
-DB_PASSWORD=example      # 資料庫密碼
-DB_DATABASE=todo_app     # 資料庫名稱
-DB_URL=mysql://root:example@localhost:3306/todo_app  # 資料庫連接 URL
+# Application server settings
+HOST=0.0.0.0
+PORT=3000
+
+# MySQL database settings
+DB_HOST=localhost
+DB_PORT=3306
+DB_USER=root
+DB_PASSWORD=example
+DB_DATABASE=todo_app
+DB_URL=mysql://root:example@localhost:3306/todo_app
 ```
 
-## Run the application
+## Running the Application
+
+### Local Development Mode
 
 ```sh
+# Compile TypeScript to JavaScript
+npm run build
+
+# Run database migration (first time or when updating database structure)
+npm run migrate
+
+# Start the application
 npm start
 ```
 
-You can also run `node .` to skip the build step.
+Visit http://127.0.0.1:3000 to view the application.
+Visit http://127.0.0.1:3000/explorer to access the API documentation.
 
-Open http://127.0.0.1:3000 in your browser.
+### Using Docker Compose
 
-## Rebuild the project
-
-To incrementally build the project:
+This is the simplest way to set up the entire environment (including the application, MySQL database, and Adminer):
 
 ```sh
+# Start all services
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop all services
+docker-compose down
+```
+
+After the services start:
+- Application API: http://localhost:3000
+- API Documentation: http://localhost:3000/explorer
+- Adminer Database Management Tool: http://localhost:8080
+  - Server: mysql
+  - Username: root
+  - Password: password
+  - Database: todo_app
+
+## API Endpoints
+
+The application provides the following main API endpoints:
+
+### Todo Related
+
+- `GET /todos`: Get all Todos (with pagination support)
+- `GET /todos/{id}`: Get a single Todo with its sub-items
+- `POST /todos`: Create a new Todo (can create sub-items simultaneously)
+- `PATCH /todos/{id}`: Partially update a Todo
+- `PUT /todos/{id}`: Completely replace a Todo
+- `DELETE /todos/{id}`: Soft delete a Todo
+- `GET /todos/count`: Get the number of Todos
+
+### Todo Sub-items Related
+
+- `GET /todos/{id}/items`: Get all sub-items for a Todo
+- `POST /todos/{id}/items`: Add a new sub-item to a Todo
+- `PATCH /todos/{id}/items`: Batch update sub-items
+- `DELETE /todos/{id}/items`: Delete sub-items
+
+## Data Models
+
+### Todo
+
+```typescript
+{
+  id: number;            // Auto-increment ID
+  title: string;         // Title (required)
+  subtitle?: string;     // Subtitle (optional)
+  status: string;        // Status (ACTIVE, INACTIVE, DELETED)
+  createdAt: string;     // Creation time
+  updatedAt: string;     // Update time
+  deletedAt?: string;    // Deletion time (for soft delete)
+  items: Item[];         // Associated sub-items list
+}
+```
+
+### Item (Sub-item)
+
+```typescript
+{
+  id: number;            // Auto-increment ID
+  content: string;       // Content (required)
+  isCompleted: boolean;  // Whether completed
+  completedAt?: string;  // Completion time
+  createdAt: string;     // Creation time
+  updatedAt: string;     // Update time
+  todoId: number;        // Associated Todo ID
+}
+```
+
+## Development Commands
+
+```sh
+# Compile the project
 npm run build
-```
 
-To force a full build by cleaning up cached artifacts:
+# Watch for file changes and automatically recompile
+npm run build:watch
 
-```sh
-npm run rebuild
-```
+# Database migration (create/update table structure)
+npm run migrate
 
-## Fix code style and formatting issues
+# Database migration (force rebuild database, use with caution!)
+npm run migrate -- --rebuild
 
-```sh
-npm run lint
-```
-
-To automatically fix such issues:
-
-```sh
-npm run lint:fix
-```
-
-## Other useful commands
-
-- `npm run migrate`: Migrate database schemas for models
-- `npm run openapi-spec`: Generate OpenAPI spec into a file
-- `npm run docker:build`: Build a Docker image for this application
-- `npm run docker:run`: Run this application inside a Docker container
-
-## 使用 Docker
-
-使用 Docker 運行應用程式時，可以通過環境變數設定資料庫連接：
-
-```sh
-docker run -p 3000:3000 \
-  -e DB_HOST=your-db-host \
-  -e DB_PORT=3306 \
-  -e DB_USER=your-user \
-  -e DB_PASSWORD=your-password \
-  -e DB_DATABASE=your-database \
-  -d todo-list-app
-```
-
-## Tests
-
-```sh
+# Run tests
 npm test
+
+# Code style check
+npm run lint
+
+# Automatically fix code style issues
+npm run lint:fix
+
+# Build Docker image
+npm run docker:build
+
+# Run Docker container
+npm run docker:run
 ```
 
-## What's next
+## Developer Guide
 
-Please check out [LoopBack 4 documentation](https://loopback.io/doc/en/lb4/) to
-understand how you can continue to add features to this application.
+For more development-related information, please refer to the [DEVELOPING.md](DEVELOPING.md) file and the [LoopBack 4 documentation](https://loopback.io/doc/en/lb4/).
 
-[![LoopBack](https://github.com/loopbackio/loopback-next/raw/master/docs/site/imgs/branding/Powered-by-LoopBack-Badge-(blue)-@2x.png)](http://loopback.io/)
+## License
+
+This project is licensed under the [MIT License](LICENSE).
+
+---
+
+[![Powered by LoopBack](https://github.com/loopbackio/loopback-next/raw/master/docs/site/imgs/branding/Powered-by-LoopBack-Badge-(blue)-@2x.png)](http://loopback.io/)
