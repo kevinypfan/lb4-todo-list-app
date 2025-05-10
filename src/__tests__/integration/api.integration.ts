@@ -12,16 +12,16 @@ describe('API 集成測試', () => {
   let itemRepository: ItemRepository;
   let todoId: number;
 
-  before(async function() {
+  before(async function () {
     ({app, client} = await setupApplication());
     todoRepository = await app.getRepository(TodoRepository);
     itemRepository = await app.getRepository(ItemRepository);
   });
 
-  beforeEach(async function() {
-    // 清理測試數據
-    await todoRepository.deleteAll();
-    await itemRepository.deleteAll();
+  beforeEach(async function () {
+    // 清理測試數據（使用 SQL 直接清除資料表）
+    await todoRepository.dataSource.execute('DELETE FROM todos');
+    await itemRepository.dataSource.execute('DELETE FROM items');
 
     // 設置初始測試數據
     const todo = await todoRepository.create({
@@ -42,7 +42,10 @@ describe('API 集成測試', () => {
     });
   });
 
-  after(async function() {
+  after(async function () {
+    // 清理測試數據（使用 SQL 直接清除資料表）
+    await todoRepository.dataSource.execute('DELETE FROM todos');
+    await itemRepository.dataSource.execute('DELETE FROM items');
     await app.stop();
   });
 
@@ -110,7 +113,8 @@ describe('API 集成測試', () => {
       // 驗證軟刪除
       // 需要可以查詢到軟刪除的 Todo，所以直接使用底層資料庫查詢
       const deletedTodo = await todoRepository.dataSource.execute(
-        'SELECT * FROM todos WHERE id = ?', [createdTodo.id]
+        'SELECT * FROM todos WHERE id = ?',
+        [createdTodo.id],
       );
 
       expect(deletedTodo).to.not.be.empty();
@@ -152,7 +156,7 @@ describe('API 集成測試', () => {
         .expect(200);
 
       expect(pageResponse.body.data).to.have.lengthOf(2);
-      expect(pageResponse.body.totalPages).to.be.greaterThanOrEqual(2);
+      expect(pageResponse.body.totalPages).to.be.equal(2);
       expect(pageResponse.body.currentPage).to.equal(1);
 
       // 測試過濾（根據狀態）

@@ -1,9 +1,5 @@
 import {inject, lifeCycleObserver, LifeCycleObserver} from '@loopback/core';
 import {juggler} from '@loopback/repository';
-import * as dotenv from 'dotenv';
-
-// 載入環境變數
-dotenv.config();
 
 const config = {
   name: 'mysql',
