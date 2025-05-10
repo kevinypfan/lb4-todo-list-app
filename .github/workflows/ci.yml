@@ -1,0 +1,75 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    # 設定 MySQL 服務容器
+    services:
+      mysql:
+        image: mysql:5.7
+        env:
+          MYSQL_ROOT_PASSWORD: example
+          MYSQL_DATABASE: todo_app_test
+        ports:
+          - 3306:3306
+        # 設置健康檢查確保 MySQL 已經啟動
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '18'
+        cache: 'pnpm'
+
+    - name: Install pnpm
+      uses: pnpm/action-setup@v2
+      with:
+        version: 8
+
+    - name: Install dependencies
+      run: pnpm install
+      
+    - name: Wait for MySQL to be ready
+      run: |
+        timeout 60s bash -c 'until mysql -h127.0.0.1 -uroot -pexample -e "SELECT 1"; do sleep 1; done'
+        
+    - name: Build
+      run: pnpm build
+      
+    - name: Migrate database
+      run: |
+        # 執行資料庫遷移
+        NODE_ENV=test pnpm migrate
+      env:
+        # 設置測試環境的環境變數
+        DB_HOST: 127.0.0.1
+        DB_PORT: 3306
+        DB_USER: root
+        DB_PASSWORD: example
+        DB_DATABASE: todo_app_test
+        DB_URL: mysql://root:example@127.0.0.1:3306/todo_app_test
+      
+    - name: Test
+      run: pnpm test
+      env:
+        # 設置測試環境的環境變數
+        DB_HOST: 127.0.0.1
+        DB_PORT: 3306
+        DB_USER: root
+        DB_PASSWORD: example
+        DB_DATABASE: todo_app_test
+        DB_URL: mysql://root:example@127.0.0.1:3306/todo_app_test

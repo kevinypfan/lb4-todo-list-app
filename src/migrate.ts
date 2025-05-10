@@ -1,6 +1,13 @@
 // 載入環境變數
 import * as dotenv from 'dotenv';
-dotenv.config();
+import path from 'path';
+
+// 根據 NODE_ENV 環境變數決定載入哪個 .env 文件
+const envPath = process.env.NODE_ENV === 'test' 
+  ? path.resolve(__dirname, '../.env.test')
+  : path.resolve(__dirname, '../.env');
+
+dotenv.config({ path: envPath });
 
 import {TodoListApplication} from './application';
 
