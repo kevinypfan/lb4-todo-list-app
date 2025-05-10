@@ -1,10 +1,11 @@
-import {injectable, /* inject, */ BindingScope} from '@loopback/core';
+import {injectable, /* inject, */ BindingScope, inject} from '@loopback/core';
 import {Filter, repository} from '@loopback/repository';
 import {Todo} from '../models';
 import {TodoRepository, ItemRepository} from '../repositories';
 import {HttpErrors} from '@loopback/rest';
 import {CreateTodoWithItems} from '../dtos';
 import {PaginatedResult, TodoStatus} from '../types';
+import {PaginationService} from './pagination';
 
 // 定義一個簡化的 Todo 類型，不包含 Entity 方法
 interface TodoData {
@@ -23,6 +24,8 @@ export class TodoService {
     private todoRepository: TodoRepository,
     @repository(ItemRepository)
     private itemRepository: ItemRepository,
+    @inject('services.PaginationService')
+    private paginationService: PaginationService,
   ) {}
 
   /**
@@ -119,31 +122,20 @@ export class TodoService {
     limit?: number,
   ): Promise<PaginatedResult<Todo>> {
     try {
-      // 設置分頁
-      const actualPage = page ?? 1;
-      const actualLimit = limit ?? 10;
-      const skip = (actualPage - 1) * actualLimit;
-
-      // 構建過濾器
-      const actualFilter = filter ?? {};
-      actualFilter.skip = skip;
-      actualFilter.limit = actualLimit;
-
       // 預設包含 items 關係
+      const actualFilter = filter ?? {};
       if (!actualFilter.include) {
         actualFilter.include = [{relation: 'items'}];
       }
 
-      // 獲取數據和總數
-      const todos = await this.todoRepository.find(actualFilter);
-      const count = await this.todoRepository.count(actualFilter.where);
-
-      return {
-        data: todos,
-        count: count.count,
-        totalPages: Math.ceil(count.count / actualLimit),
-        currentPage: actualPage,
-      };
+      // 使用通用分頁服務
+      return await this.paginationService.paginate(
+        (f) => this.todoRepository.find(f),
+        (where) => this.todoRepository.count(where),
+        actualFilter,
+        page,
+        limit
+      );
     } catch (error) {
       throw new HttpErrors.InternalServerError('獲取所有 Todo 時出錯');
     }

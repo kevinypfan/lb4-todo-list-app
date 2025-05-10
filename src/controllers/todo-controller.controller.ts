@@ -22,6 +22,7 @@ import {TodoRepository} from '../repositories';
 import {inject} from '@loopback/core';
 import {TodoService} from '../services';
 import {CreateTodoWithItems} from '../dtos';
+import {PaginatedResult} from '../types';
 
 export class TodoControllerController {
   constructor(
@@ -86,12 +87,7 @@ export class TodoControllerController {
     @param.filter(Todo) filter?: Filter<Todo>,
     @param.query.number('page') page?: number,
     @param.query.number('limit') limit?: number,
-  ): Promise<{
-    data: Todo[];
-    count: number;
-    totalPages: number;
-    currentPage: number;
-  }> {
+  ): Promise<PaginatedResult<Todo>> {
     return this.todoService.getAllTodos(filter, page, limit);
   }
 
