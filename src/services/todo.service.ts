@@ -66,7 +66,6 @@ export class TodoService {
       });
     } catch (error) {
       // 處理錯誤
-      console.error('創建 Todo 和 Items 時出錯:', error);
       throw new HttpErrors.InternalServerError('創建 Todo 和 Items 時出錯');
     }
   }
@@ -90,7 +89,6 @@ export class TodoService {
         updatedAt: new Date().toISOString(),
       });
     } catch (error) {
-      console.error(`軟刪除 Todo (ID: ${id}) 時出錯:`, error);
       throw new HttpErrors.InternalServerError(`軟刪除 Todo 時出錯`);
     }
   }
@@ -105,7 +103,6 @@ export class TodoService {
         include: [{relation: 'items'}],
       });
     } catch (error) {
-      console.error(`獲取 Todo (ID: ${id}) 時出錯:`, error);
       throw new HttpErrors.NotFound(`找不到 ID 為 ${id} 的 Todo`);
     }
   }
@@ -148,7 +145,6 @@ export class TodoService {
         currentPage: actualPage,
       };
     } catch (error) {
-      console.error('獲取所有 Todo 時出錯:', error);
       throw new HttpErrors.InternalServerError('獲取所有 Todo 時出錯');
     }
   }
