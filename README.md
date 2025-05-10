@@ -18,6 +18,20 @@ To only install resolved dependencies in `package-lock.json`:
 npm ci
 ```
 
+## 環境變數設定
+
+請在專案根目錄建立 `.env` 文件（可參考 `.env.example`），並設定以下環境變數：
+
+```
+# MySQL 資料庫設定
+DB_HOST=localhost        # 資料庫主機
+DB_PORT=3306             # 資料庫端口
+DB_USER=root             # 資料庫用戶名
+DB_PASSWORD=example      # 資料庫密碼
+DB_DATABASE=todo_app     # 資料庫名稱
+DB_URL=mysql://root:example@localhost:3306/todo_app  # 資料庫連接 URL
+```
+
 ## Run the application
 
 ```sh
@@ -60,6 +74,20 @@ npm run lint:fix
 - `npm run openapi-spec`: Generate OpenAPI spec into a file
 - `npm run docker:build`: Build a Docker image for this application
 - `npm run docker:run`: Run this application inside a Docker container
+
+## 使用 Docker
+
+使用 Docker 運行應用程式時，可以通過環境變數設定資料庫連接：
+
+```sh
+docker run -p 3000:3000 \
+  -e DB_HOST=your-db-host \
+  -e DB_PORT=3306 \
+  -e DB_USER=your-user \
+  -e DB_PASSWORD=your-password \
+  -e DB_DATABASE=your-database \
+  -d todo-list-app
+```
 
 ## Tests
 

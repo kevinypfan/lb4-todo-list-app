@@ -1,3 +1,7 @@
+// 載入環境變數
+import * as dotenv from 'dotenv';
+dotenv.config();
+
 import {TodoListApplication} from './application';
 
 export async function migrate(args: string[]) {

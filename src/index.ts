@@ -1,3 +1,7 @@
+// 最先載入環境變數
+import * as dotenv from 'dotenv';
+dotenv.config();
+
 import {ApplicationConfig, TodoListApplication} from './application';
 
 export * from './application';
